@@ -6,6 +6,7 @@
 // http://computer-graphics.se/multicore/pdf/hello_world_cl.c
 
 #include <stdio.h>
+#include <unistd.h>
 #include <math.h>
 #ifdef __APPLE__
 	#include <OpenCL/opencl.h>
