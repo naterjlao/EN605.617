@@ -25,6 +25,9 @@ int main(int argc, char** argv)
 	int numBlocks = totalThreads/blockSize;
 
 	printf("INITIALIZING\n");
+	std::chrono::time_point<std::chrono::steady_clock> start_time;
+	std::chrono::time_point<std::chrono::steady_clock> stop_time;
+
 
 	// validate command line arguments
 	if (totalThreads % blockSize != 0) {
@@ -89,17 +92,26 @@ int main(int argc, char** argv)
 
 	printf("\nGPU EXECUTE\n");
 
-	printf("Performing GPU Addition\n");
+	printf("Performing GPU Addition");
+	start_time = std::chrono::steady_clock::now();
 	cuda_add<<<numBlocks, blockSize>>>(gpu_a, gpu_b, gpu_sum);
+	stop_time = std::chrono::steady_clock::now();
+	printf(" ---------------------- %d Ticks\n", (stop_time - start_time));
 
-	printf("Performing GPU Subtraction\n");
+	printf("Performing GPU Subtraction");
 	cuda_sub<<<numBlocks, blockSize>>>(gpu_a, gpu_b, gpu_dif);
+	stop_time = std::chrono::steady_clock::now();
+	printf(" ------------------- %d Ticks\n", (stop_time - start_time));
 
-	printf("Performing GPU Multiplication\n");
+	printf("Performing GPU Multiplication");
 	cuda_mul<<<numBlocks, blockSize>>>(gpu_a, gpu_b, gpu_prd);
+	stop_time = std::chrono::steady_clock::now();
+	printf(" ---------------- %d Ticks\n", (stop_time - start_time));
 
-	printf("Performing GPU Modulo\n");
+	printf("Performing GPU Modulo");
 	cuda_mod<<<numBlocks, blockSize>>>(gpu_a, gpu_b, gpu_rem);
+	stop_time = std::chrono::steady_clock::now();
+	printf(" ------------------------ %d Ticks\n", (stop_time - start_time));
 
 	// Free memory on GPU, copy to Host
 	cudaMemcpy( a, gpu_a, ARRAY_BYTES, cudaMemcpyDeviceToHost );
@@ -123,17 +135,29 @@ int main(int argc, char** argv)
 
 	printf("\nCPU EXECUTE\n");
 
-	printf("Performing CPU Addition\n");
+	printf("Performing CPU Addition");
+	start_time = std::chrono::steady_clock::now();
 	list_add(a, b, cpu_sum, ARRAY_LENGTH);
+	stop_time = std::chrono::steady_clock::now();
+	printf(" ---------------------- %d Ticks\n", (stop_time - start_time));
 
-	printf("Performing CPU Subtraction\n");
+	printf("Performing CPU Subtraction");
+	start_time = std::chrono::steady_clock::now();
 	list_sub(a, b, cpu_dif, ARRAY_LENGTH);
+	stop_time = std::chrono::steady_clock::now();
+	printf(" ------------------- %d Ticks\n", (stop_time - start_time));
 
-	printf("Performing CPU Multiplication\n");
+	printf("Performing CPU Multiplication");
+	start_time = std::chrono::steady_clock::now();
 	list_mul(a, b, cpu_prd, ARRAY_LENGTH);
+	stop_time = std::chrono::steady_clock::now();
+	printf(" ---------------- %d Ticks\n", (stop_time - start_time));
 
-	printf("Performing CPU Modulo\n");
+	printf("Performing CPU Modulo");
+	start_time = std::chrono::steady_clock::now();
 	list_mod(a, b, cpu_rem, ARRAY_LENGTH);
+	stop_time = std::chrono::steady_clock::now();
+	printf(" ------------------------ %d Ticks\n", (stop_time - start_time));
 
 	// Verify if results are accurate
 	printf("\nTEST RESULTS\n");
