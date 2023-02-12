@@ -19,6 +19,8 @@ int main(int argc, char** argv)
 
 	int numBlocks = totalThreads/blockSize;
 
+	printf("INITIALIZING\n");
+
 	// validate command line arguments
 	if (totalThreads % blockSize != 0) {
 		++numBlocks;
@@ -80,6 +82,8 @@ int main(int argc, char** argv)
 	printf("Populating Thread Idx Array\n");
 	populate_thread_idx<<<numBlocks, blockSize>>>(gpu_a);
 
+	printf("\nGPU EXECUTE\n");
+
 	printf("Performing GPU Addition\n");
 	cuda_add<<<numBlocks, blockSize>>>(gpu_a, gpu_b, gpu_sum);
 
@@ -112,22 +116,38 @@ int main(int argc, char** argv)
 	int *cpu_prd = (int *) malloc(ARRAY_BYTES);
 	int *cpu_rem = (int *) malloc(ARRAY_BYTES);
 
+	printf("\nCPU EXECUTE\n");
+
 	printf("Performing CPU Addition\n");
 	list_add(a, b, cpu_sum, ARRAY_LENGTH);
 
 	printf("Performing CPU Subtraction\n");
-	list_sub(a, b, cpu_sum, ARRAY_LENGTH);
+	list_sub(a, b, cpu_dif, ARRAY_LENGTH);
 
 	printf("Performing CPU Multiplication\n");
-	list_mul(a, b, cpu_sum, ARRAY_LENGTH);
+	list_mul(a, b, cpu_prd, ARRAY_LENGTH);
 
 	printf("Performing CPU Modulo\n");
-	list_mod(a, b, cpu_sum, ARRAY_LENGTH);
+	list_mod(a, b, cpu_rem, ARRAY_LENGTH);
 
+	// Verify if results are accurate
+	printf("\nTEST RESULTS\n");
+	bool add_test = true;
+	bool sub_test = true;
+	bool mul_test = true;
+	bool mod_test = true;
 	for (size_t i = 0; i < ARRAY_LENGTH; i++)
 	{
-		//printf("%d %d %d %d %d\n",a[i], b[i], sum[i], dif[i], rem[i]);
+		add_test = add_test && (sum[i] == cpu_sum[i]);
+		sub_test = add_test && (dif[i] == cpu_dif[i]);
+		mul_test = add_test && (prd[i] == cpu_prd[i]);
+		mod_test = add_test && (rem[i] == cpu_rem[i]);
+		
 	}
+	printf("Addition ------------------------------------- %s\n", add_test ? "PASSED" : "FAILED");
+	printf("Substraction --------------------------------- %s\n", sub_test ? "PASSED" : "FAILED");
+	printf("Multiplication ------------------------------- %s\n", mul_test ? "PASSED" : "FAILED");
+	printf("Modulo --------------------------------------- %s\n", mod_test ? "PASSED" : "FAILED");
 
 	free(a);
 	free(b);
