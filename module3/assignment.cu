@@ -1,6 +1,11 @@
-
+//-----------------------------------------------------------------------------
+/// @file
+/// @author Nate Lao (nlao1@jh.edu)
+/// @brief
+//-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
+#include <chrono>
 #include "helpers.h"
 #include "math.h"
 
