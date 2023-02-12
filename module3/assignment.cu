@@ -1,6 +1,8 @@
 
 #include <stdio.h>
-#include "assignment.h"
+#include <stdlib.h>
+#include "helpers.h"
+#include "math.h"
 
 int main(int argc, char** argv)
 {
@@ -26,5 +28,16 @@ int main(int argc, char** argv)
 		printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
 
+	// Allocate Lists
+	int *a = (int *) malloc(sizeof(int) * totalThreads);
+	foo();
+	//populate_random_list(a, totalThreads, 3);
+	for (size_t i = 0; i < totalThreads; i++)
+	{
+		printf("%d",a[i]);
+	}
 
+	cuda_add<<<numBlocks, blockSize>>>(0,0);
+
+	free(a);
 }
