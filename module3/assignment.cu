@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-/// @file
+/// @file assignment.cu
 /// @author Nate Lao (nlao1@jh.edu)
-/// @brief
+/// @brief Module 3 Assignment Driver
 //-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
