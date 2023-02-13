@@ -16,6 +16,7 @@ math.o: math.h math.cu
 clean:
 	rm -rvf main
 	rm -rvf *.o
+	rm -rvf *.csv
 
 a: all
 c: clean
