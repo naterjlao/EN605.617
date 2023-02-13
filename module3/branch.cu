@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     start_time = std::chrono::steady_clock::now();
     cuda_branch<<<numBlocks, blockSize>>>(gpu_buff);
 	stop_time = std::chrono::steady_clock::now();
-    printf("%d",(stop_time - start_time));
+    printf("%d,",(stop_time - start_time));
 
 	start_time = std::chrono::steady_clock::now();
     host_branch(cpu_buff, totalThreads);
