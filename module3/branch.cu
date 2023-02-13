@@ -75,14 +75,6 @@ int main(int argc, char **argv)
     printf("%d",(stop_time - start_time));
 
     printf("\n");
-    
-	
-    
-    
-    //cudaMemcpy(cpu_buff,gpu_buff,(ARRAY_LENGTH * sizeof(int)),cudaMemcpyDeviceToHost);
-    //for (int i = 0; i < ARRAY_LENGTH; i++) printf("%d",cpu_buff[i]);
-    
-    
 
     free(cpu_buff);
     cudaFree(gpu_buff);

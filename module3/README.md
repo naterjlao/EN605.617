@@ -25,12 +25,29 @@ Compilation command:
 make branch
 ```
 
-
 # Execution
-The `main` executable can be ran using the following command:
+The `main` executable can be run using the following command:
 ```
 ./main <X> <Y>
+
+Where:
+- X is the number of threads
+- Y is the block size
 ```
 
-The `run.sh` script executes either main (CSV) or branch executable and outputs to a `results.csv` file.  
-Usage can be found in the `run.sh` header.
+The `branch` executable can be run by using the following command:
+```
+./branch <X> <Y>
+
+Where:
+- X is the number of threads
+- Y is the block size
+```
+
+## Run
+The `run_csv.sh` script executes The Main (CSV) executable in sequence and outputs to a `results.csv` file.  
+Usage can be found in the `run_csv.sh` header.  
+
+The `run_branch.sh` script executes The Branch executable in sequence and outputs to a `results.csv` file.  
+Usage can be found in the `run_csv.sh` header.  
+
