@@ -5,6 +5,9 @@ main: assignment.cu helpers.o math.o
 csv: assignment.cu helpers.o math.o 
 	nvcc assignment.cu helpers.o math.o -DCSV -o main
 
+branch: branch.cu helpers.o
+	nvcc branch.cu helpers.o -o branch
+
 helpers.o: helpers.h helpers.cu
 	nvcc -c helpers.cu
 
