@@ -5,10 +5,7 @@
 extern "C" size_t read_file(const char *filename, char **buffer)
 {
     size_t length = 0;
-    FILE *file;
-    char ch;
-
-    file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
 
     if (file > 0)
     {
@@ -19,7 +16,7 @@ extern "C" size_t read_file(const char *filename, char **buffer)
 
         // Allocate memory
         *buffer = (char *) malloc(length);
-        fread(*buffer, length, 1, file);
+        fread(*buffer, sizeof(char), length, file);
         fclose(file);
     }
     else
@@ -30,4 +27,18 @@ extern "C" size_t read_file(const char *filename, char **buffer)
     }
 
     return length;
+}
+
+bool write_file(const char *filename, char *buffer, const size_t length)
+{
+    bool retval = false;
+    FILE *file = fopen(filename, "w");
+
+    if (file != 0)
+    {
+        retval = fwrite(buffer, sizeof(char), length, file);
+        fclose(file);
+    }
+
+    return retval;
 }
