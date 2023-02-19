@@ -2,4 +2,5 @@ pageable
 pinned
 *.o
 *.csv
+*.txt
 fileio.cpp
