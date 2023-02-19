@@ -14,5 +14,21 @@
 __global__ void caesar_cypher(char *buffer, const int offset)
 {
     const unsigned int thread_idx = (blockIdx.x * blockDim.x) + threadIdx.x;
-    buffer[thread_idx] = buffer[thread_idx] + offset;
+    char ch = buffer[thread_idx];
+    
+    if (ch >= 'A' && ch <= 'Z')
+    {
+        ch += offset;
+        ch += (ch < 'A') ? ('Z' - 'A' + 1) : 0;
+        ch -= (ch > 'Z') ? ('Z' - 'A' + 1) : 0;
+    }
+
+    if (ch >= 'a' && ch <= 'z')
+    {
+        ch += offset;
+        ch += (ch < 'a') ? ('z' - 'a' + 1) : 0;
+        ch -= (ch > 'z') ? ('z' - 'a' + 1) : 0;
+    }
+
+    buffer[thread_idx] = ch;
 }
