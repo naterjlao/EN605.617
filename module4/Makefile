@@ -1,5 +1,5 @@
-main: assignment.c cypher.o fileio.o
-	nvcc assignment.c cypher.o fileio.o -o main
+main: assignment.cu cypher.o fileio.o
+	nvcc assignment.cu cypher.o fileio.o -o main
 
 cypher.o: cypher.h cypher.cu
 	nvcc -c cypher.cu
