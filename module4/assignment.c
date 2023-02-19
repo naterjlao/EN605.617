@@ -1,26 +1,32 @@
 #include <stdio.h>
+#include "fileio.h"
 
 int main(int argc, char** argv)
 {
-	// read command line arguments
-	int totalThreads = (1 << 20);
-	int blockSize = 256;
-	
-	if (argc >= 2) {
-		totalThreads = atoi(argv[1]);
-	}
-	if (argc >= 3) {
-		blockSize = atoi(argv[2]);
+	// Evaluate arguments
+	if (argc != 2)
+	{
+		printf("ERROR: invalid arguments, expecting:\n");
+		printf("main <FILENAME>\n");
+		return -1;
 	}
 
-	int numBlocks = totalThreads/blockSize;
-
-	// validate command line arguments
-	if (totalThreads % blockSize != 0) {
-		++numBlocks;
-		totalThreads = numBlocks*blockSize;
-		
-		printf("Warning: Total thread count is not evenly divisible by the block size\n");
-		printf("The total number of threads will be rounded up to %d\n", totalThreads);
+	// Read file input
+	const char *filename = argv[1];
+	char *buffer;
+	size_t length = read_file(filename, &buffer);
+	if (length == 0)
+	{
+		printf("ERROR: empty file or file open failed");
+		return -1;
 	}
+
+
+	// Cleanup
+	if (buffer != 0)
+	{
+		free(buffer);
+	}
+
+	return 0;
 }

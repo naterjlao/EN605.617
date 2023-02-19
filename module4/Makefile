@@ -1,8 +1,11 @@
-main: assignment.c cypher.o
-	nvcc assignment.c cypher.o -o main
+main: assignment.c cypher.o fileio.o
+	nvcc assignment.c cypher.o fileio.o -o main
 
 cypher.o: cypher.h cypher.cu
 	nvcc -c cypher.cu
+
+fileio.o: fileio.h fileio.c
+	nvcc -c fileio.c
 
 .PHONY: clean
 
