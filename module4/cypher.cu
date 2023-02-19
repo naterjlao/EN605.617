@@ -6,10 +6,10 @@
 #include "cypher.h"
 
 //-----------------------------------------------------------------------------
-/// @brief 
-/// @param buffer 
-/// @param offset 
-/// @return 
+/// @brief Offsets the character buffer by a given value.
+/// @param buffer Pointer to character buffer.
+/// @param offset Offset value.
+/// @return None.
 //-----------------------------------------------------------------------------
 __global__ void caesar_cypher(char *buffer, const int offset)
 {
