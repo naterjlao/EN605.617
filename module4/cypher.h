@@ -1,3 +1,8 @@
+//-----------------------------------------------------------------------------
+/// @file cypher.h
+/// @author Nate Lao (nlao1@jh.edu)
+/// @brief Module 4 Caesar Cypher Headers
+//-----------------------------------------------------------------------------
 #ifndef __CYPHER_H__
 #define __CYPHER_H__
 
