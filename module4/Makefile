@@ -25,6 +25,7 @@ clean:
 	rm -rvf pinned
 	rm -rvf fileio.cpp
 	rm -rvf *.o
+	rm -rvf *.csv
 	rm -rvf *.txt
 
 a: all
