@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-#if 0
+#if 1
 	// Setup Device Memory
 	const int BLOCK_SIZE = 1024;
 	const int NUM_BLOCKS = length / BLOCK_SIZE + ((length % BLOCK_SIZE > 0) ? 1 : 0);
