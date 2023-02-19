@@ -5,16 +5,17 @@
 
 int main(int argc, char** argv)
 {
-	// Evaluate arguments
-	if (argc != 2)
+	// Read arguments
+	if (argc < 3)
 	{
-		fprintf(stderr,"ERROR: invalid arguments, expecting:\n");
-		fprintf(stderr,"main <FILENAME>\n");
+		fprintf(stderr,"ERROR: invalid number of arguments, expecting:\n");
+		fprintf(stderr,"main <FILENAME> <CYPHER_SHIFT>\n");
 		return -1;
 	}
-
-	// Read file input
 	const char *filename = argv[1];
+	const int cypher_shift = atoi(argv[2]);
+
+	// Read in file and store in Host buffer
 	char *buffer;
 	size_t length = read_file(filename, &buffer);
 	if (length == 0)
@@ -31,7 +32,7 @@ int main(int argc, char** argv)
 	cudaMemcpy(device_buffer, buffer, length, cudaMemcpyHostToDevice);
 
 	// Run the conversion on the GPU
-	caesar_cypher<<<NUM_BLOCKS, BLOCK_SIZE>>>(device_buffer, 5);
+	caesar_cypher<<<NUM_BLOCKS, BLOCK_SIZE>>>(device_buffer, cypher_shift);
 
 	// Free Device Memory
 	cudaMemcpy(buffer, device_buffer, length, cudaMemcpyDeviceToHost);
