@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 	}
 
 	// Setup Device Memory
-	const int BLOCK_SIZE = 256;
+	const int BLOCK_SIZE = 1024;
 	const int NUM_BLOCKS = length / BLOCK_SIZE + ((length % BLOCK_SIZE > 0) ? 1 : 0);
 	char *device_buffer;
 	cudaMalloc(&device_buffer, (NUM_BLOCKS * BLOCK_SIZE) * sizeof(char)); // We allocate more if needed
