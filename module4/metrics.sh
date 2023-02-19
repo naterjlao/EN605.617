@@ -1,8 +1,13 @@
 #!/bin/bash
-# Descriptions:
+# Description:
 # Runs n number of operations for both Pageable and Pinned Memory
 # Caesar Cypher operations on samples/bigsample.txt.
 # Computes the average of both types.
+#
+# Prerequisites:
+# The pageable and pinned executables must be compiled prior to
+# execution.
+#
 # Usage:
 # ./metrics.sh [n]
 # Where:
