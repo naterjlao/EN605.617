@@ -4,8 +4,8 @@ main: assignment.cu cypher.o fileio.o
 cypher.o: cypher.h cypher.cu
 	nvcc -c cypher.cu
 
-fileio.o: fileio.h fileio.c
-	g++ -c fileio.c
+fileio.o: fileio.h fileio.cpp
+	g++ -c fileio.cpp
 
 .PHONY: clean
 
