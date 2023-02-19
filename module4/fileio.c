@@ -21,7 +21,6 @@ size_t read_file(const char *filename, char **buffer)
         *buffer = malloc(length);
         fread(*buffer, length, 1, file);
         fclose(file);
-        printf("%s\n", *buffer);
     }
     else
     {
