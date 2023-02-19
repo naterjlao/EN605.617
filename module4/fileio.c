@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "fileio.h"
 
-size_t read_file(const char *filename, char **buffer)
+extern "C" size_t read_file(const char *filename, char **buffer)
 {
     size_t length = 0;
     FILE *file;
@@ -18,7 +18,7 @@ size_t read_file(const char *filename, char **buffer)
         fseek(file, 0, SEEK_SET);
 
         // Allocate memory
-        *buffer = malloc(length);
+        *buffer = (char *) malloc(length);
         fread(*buffer, length, 1, file);
         fclose(file);
     }

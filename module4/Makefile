@@ -5,7 +5,7 @@ cypher.o: cypher.h cypher.cu
 	nvcc -c cypher.cu
 
 fileio.o: fileio.h fileio.c
-	nvcc -c fileio.c
+	g++ -c fileio.c
 
 .PHONY: clean
 
