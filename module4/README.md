@@ -15,5 +15,6 @@ Where:
 - `OUTPUT_FILE`: Name of the output text file (optional)
 
 ## Validation and Metrics
-The `verify.sh` and `metrics.sh` scripts can be used.  
+The `verify.sh` and `metrics.sh` scripts can be used to individually run tests.  
+Additionally, the `run.sh` will run compile the binaries and run both tests.
 Refer the script headers for more information
