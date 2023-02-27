@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 /// @file assignment.cu
 /// @author Nate Lao (nlao1@jh.edu)
-/// @brief Module 4 Main Driver
+/// @brief Module 5 Main Driver
 //-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <chrono>
