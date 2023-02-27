@@ -1,5 +1,4 @@
-pageable
-pinned
+main
 *.o
 *.csv
 *.txt
