@@ -3,8 +3,8 @@
 /// @author Nate Lao (nlao1@jh.edu)
 /// @brief Module 6 Helper Functions
 //-----------------------------------------------------------------------------
-#ifndef __HELPERS_H__
-#define __HELPERS_H__
+#ifndef __HELPERS_CUH__
+#define __HELPERS_CUH__
 
 #include <curand.h>
 #include <curand_kernel.h>

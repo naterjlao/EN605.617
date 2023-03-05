@@ -5,19 +5,20 @@
 //-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <chrono>
+#include <math.h>
 #include "helpers.cuh"
 #include "transform.cuh"
 
-// FUNCTION PROTOTYPES
-__host__ void setup(const int totalThreads, const int numBlocks, const int blockSize, float * buffer);
-__global__ void kernel_call_const(float *buffer);
-__global__ void kernel_call_shared(float *buffer);
+#define PRINT_RESULTS 0
+typedef void (*KERNEL_FUNCTION)(float *, size_t);
+__host__ void setup(const int totalThreads, const int numBlocks, const int blockSize, float *buffer);
+__host__ std::chrono::duration<int64_t, std::nano> run_test(const int totalThreads, const int numBlocks, const int blockSize, float *buffer, const size_t buffer_size, KERNEL_FUNCTION kernel_function);
 
 //-----------------------------------------------------------------------------
-/// @brief 
-/// @param argc 
-/// @param argv 
-/// @return 
+/// @brief
+/// @param argc
+/// @param argv
+/// @return
 //-----------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
@@ -47,41 +48,14 @@ int main(int argc, char **argv)
 	}
 
 	// Setup local buffer
-	const size_t BUFFER_SIZE = totalThreads * sizeof(float);
-	float *coordinates = (float *)malloc(BUFFER_SIZE * 2);
+	const size_t BUFFER_SIZE = 2 * totalThreads * sizeof(float);
+	float *coordinates = (float *)malloc(BUFFER_SIZE);
 	setup(totalThreads, numBlocks, blockSize, &coordinates[0]);
 	setup(totalThreads, numBlocks, blockSize, &coordinates[totalThreads]);
-	
 
-#if 0
-	// Constant Memory Operation
-	float *const_result;
-	float *dev_const_buffer;
-	const_result = (float *) malloc(BUFFER_SIZE);
-	cudaMalloc(&dev_const_buffer, BUFFER_SIZE);
-	cudaMemcpy(dev_const_buffer, buffer, BUFFER_SIZE, cudaMemcpyHostToDevice);
-	const std::chrono::time_point<std::chrono::steady_clock> const_start = std::chrono::steady_clock::now();
-	kernel_call_const<<<numBlocks,blockSize>>>(dev_const_buffer);
-	const std::chrono::time_point<std::chrono::steady_clock> const_end = std::chrono::steady_clock::now();
-	cudaMemcpy(const_result, dev_const_buffer, BUFFER_SIZE, cudaMemcpyDeviceToHost);
-	cudaFree(dev_const_buffer);
-	free(const_result);
+	printf("%d,", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_register));
+	printf("%d\n", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_global));
 
-	// Shared Memory Operation
-	float *shared_result;
-	float *dev_shared_buffer;
-	shared_result = (float *) malloc(BUFFER_SIZE);
-	cudaMalloc(&dev_shared_buffer, BUFFER_SIZE);
-	cudaMemcpy(dev_shared_buffer, buffer, BUFFER_SIZE, cudaMemcpyHostToDevice);
-	const std::chrono::time_point<std::chrono::steady_clock> shared_start = std::chrono::steady_clock::now();
-	kernel_call_shared<<<numBlocks,blockSize>>>(dev_shared_buffer);
-	const std::chrono::time_point<std::chrono::steady_clock> shared_end = std::chrono::steady_clock::now();
-	cudaMemcpy(shared_result, dev_shared_buffer, BUFFER_SIZE, cudaMemcpyDeviceToHost);
-	cudaFree(dev_shared_buffer);
-	free(shared_result);
-
-	printf("%d, %d\n",(const_end - const_start), (shared_end - shared_start));
-#endif
 	// Cleanup
 	free(coordinates);
 }
@@ -110,15 +84,26 @@ __host__ void setup(const int totalThreads, const int numBlocks, const int block
 	cudaFree(dev_buffer);
 }
 
-// Kernel for const memory operations
-__global__ void kernel_call_const(float *buffer)
+__host__ std::chrono::duration<int64_t, std::nano> run_test(
+	const int totalThreads, const int numBlocks, const int blockSize,
+	float *buffer, const size_t buffer_size, KERNEL_FUNCTION kernel_function)
 {
-	const unsigned int thread_idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+#if PRINT_RESULTS
+	float *result = (float *)malloc(buffer_size);
+#endif
+	float *dev_buffer;
+	cudaMalloc(&dev_buffer, buffer_size);
+	cudaMemcpy(dev_buffer, buffer, buffer_size, cudaMemcpyHostToDevice);
+	const std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+	kernel_function<<<numBlocks, blockSize>>>(dev_buffer, totalThreads);
+	cudaDeviceSynchronize();
+	const std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+#if PRINT_RESULTS
+	cudaMemcpy(result, dev_buffer, buffer_size, cudaMemcpyDeviceToHost);
+	for (size_t idx = 0; idx < totalThreads; idx++)
+		printf("(%f,%f)\n", result[idx], result[idx + totalThreads]);
+	free(result);
+#endif
+	cudaFree(dev_buffer);
+	return end - start;
 }
-
-// Kernel for shared memory operations
-__global__ void kernel_call_shared(float *buffer)
-{
-	const unsigned int thread_idx = (blockIdx.x * blockDim.x) + threadIdx.x;
-}
-
