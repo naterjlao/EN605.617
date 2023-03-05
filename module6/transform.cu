@@ -1,4 +1,4 @@
-#include "transform.h"
+#include "transform.cuh"
 
 __device__ void translate_2d(float *x, float *y, const float dx, const float dy)
 {

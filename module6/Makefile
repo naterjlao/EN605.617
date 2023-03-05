@@ -1,8 +1,11 @@
-main: assignment.h assignment.cu helpers.o
-	nvcc assignment.cu helpers.o -o main
+main: assignment.cuh assignment.cu helpers.o transform.o
+	nvcc assignment.cu helpers.o transform.o -o main
 
-helpers.o: helpers.h helpers.cu
+helpers.o: helpers.cuh helpers.cu
 	nvcc -c helpers.cu
+
+transform.o: transform.cuh transform.cu
+	nvcc -c transform.cu
 
 .PHONY: clean
 

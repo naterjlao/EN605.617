@@ -3,7 +3,7 @@
 /// @author Nate Lao (nlao1@jh.edu)
 /// @brief Module 5 Helper Functions
 //-----------------------------------------------------------------------------
-#include "helpers.h"
+#include "helpers.cuh"
 
 //-----------------------------------------------------------------------------
 /// @brief Assigns the index number to each corresponding element in a given array.

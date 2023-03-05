@@ -1,12 +1,13 @@
 //-----------------------------------------------------------------------------
 /// @file assignment.cu
 /// @author Nate Lao (nlao1@jh.edu)
-/// @brief Module 5 Main Driver
+/// @brief Module 6 Main Driver
 //-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <chrono>
-#include "assignment.h"
-#include "helpers.h"
+#include "assignment.cuh"
+#include "helpers.cuh"
+#include "transform.cuh"
 
 // This does absolutely nothing
 __constant__ float const_addr[NUM_ELEMENTS] = {0.0, 0.0, 0.0, 0.0};
