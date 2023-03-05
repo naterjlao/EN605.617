@@ -1,4 +1,4 @@
-main: assignment.cuh assignment.cu helpers.o transform.o
+main: assignment.cu helpers.o transform.o
 	nvcc assignment.cu helpers.o transform.o -o main
 
 helpers.o: helpers.cuh helpers.cu

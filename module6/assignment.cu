@@ -5,16 +5,20 @@
 //-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <chrono>
-#include "assignment.cuh"
 #include "helpers.cuh"
 #include "transform.cuh"
 
-// This does absolutely nothing
-__constant__ float const_addr[NUM_ELEMENTS] = {0.0, 0.0, 0.0, 0.0};
-__constant__ float const_subb[NUM_ELEMENTS] = {0.0, 0.0, 0.0, 0.0};
-__constant__ float const_mult[NUM_ELEMENTS] = {1.0, 1.0, 1.0, 1.0};
-__constant__ float const_divd[NUM_ELEMENTS] = {1.0, 1.0, 1.0, 1.0};
+// FUNCTION PROTOTYPES
+__host__ void setup(const int totalThreads, const int numBlocks, const int blockSize, float * buffer);
+__global__ void kernel_call_const(float *buffer);
+__global__ void kernel_call_shared(float *buffer);
 
+//-----------------------------------------------------------------------------
+/// @brief 
+/// @param argc 
+/// @param argv 
+/// @return 
+//-----------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
 	// read command line arguments
@@ -48,9 +52,7 @@ int main(int argc, char **argv)
 	setup(totalThreads, numBlocks, blockSize, &coordinates[0]);
 	setup(totalThreads, numBlocks, blockSize, &coordinates[totalThreads]);
 	
-#if 1
-	for (size_t idx = 0; idx < totalThreads; idx++) printf("(%f,%f)\n",coordinates[idx], coordinates[idx + totalThreads]);
-#endif
+
 #if 0
 	// Constant Memory Operation
 	float *const_result;
@@ -120,17 +122,3 @@ __global__ void kernel_call_shared(float *buffer)
 	const unsigned int thread_idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 }
 
-// Iterates through a memory array and operate over the input value.
-__device__ float operation(float val,
-						   float arr_addr[NUM_ELEMENTS],
-						   float arr_subb[NUM_ELEMENTS],
-						   float arr_mult[NUM_ELEMENTS],
-						   float arr_divd[NUM_ELEMENTS])
-{
-	float retval = val;
-	for (int i = 0; i < NUM_ELEMENTS; i++)
-	{
-		retval = math(retval, arr_addr[i], arr_subb[i], arr_mult[i], arr_divd[i]);
-	}
-	return retval;
-}
