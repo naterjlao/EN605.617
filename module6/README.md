@@ -9,11 +9,10 @@ The following syntax is used to execute `main`.
 ./main <THREADS> <BLOCK_SIZE>
 ```
 Where:
-- `EXE`: Either `pageable` or `pinned`
 - `THREADS`: Name of the input text file
 - `BLOCK_SIZE`: Offset value for the Caesar Cypher
 
-The time measurements for Constant Memory and Shared Memory operations are
+The time measurements for Global Memory and Register Memory operations are
 printed (in order) to stdout.
 
 ## Validation and Metrics
