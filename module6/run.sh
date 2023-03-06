@@ -1,21 +1,19 @@
 #!/bin/bash
 # Usage:
-# ./run.sh <n> [v] [b]
-# Where:
-# n - number of iterations
-# v - vector size (optional)
-# b - block size (optional)
-# Example:
-# ./run.sh 10
+# ./run.sh
 make c
 make main
 rm -rvf results.csv
 touch results.csv
-echo -n "const_memory,shared_memory" >> results.csv
+echo -n "threads,register,global" >> results.csv
 echo "" >> results.csv
 
-for (( i=1; i <= $1; i++ ))
+# 2^25
+maxThreads=33554432
+threads=1024
+while [ $threads -le $maxThreads ]
 do
-    echo "run $i"
-    ./main $2 $3 >> results.csv
+    echo -n "$threads," >> results.csv
+    ./main $threads >> results.csv
+    threads=$(($threads * 2))
 done

@@ -1,6 +1,30 @@
+//-----------------------------------------------------------------------------
+/// @file transform.cu
+/// @author Nate Lao (nlao1@jh.edu)
+/// @brief Module 6 Matrix Transformation Functions
+//-----------------------------------------------------------------------------
 #include "transform.cuh"
 
-// Kernel for const memory operations
+//-----------------------------------------------------------------------------
+/// @brief Kernel call for Global Memory access
+/// @param buffer Pointer to host buffer
+/// @param n_points Number of points in in coordinate buffer. Note that the buffer
+/// itself must have 2*n_points float elements.
+/// @return None
+//-----------------------------------------------------------------------------
+__global__ void kernel_call_global(float *buffer, const size_t n_points)
+{
+	const unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+	operation(&buffer[idx], &buffer[idx + n_points]);
+}
+
+//-----------------------------------------------------------------------------
+/// @brief Kernel call for Register Memory access
+/// @param buffer Pointer to host buffer
+/// @param n_points Number of points in in coordinate buffer. Note that the buffer
+/// itself must have 2*n_points float elements.
+/// @return None
+//-----------------------------------------------------------------------------
 __global__ void kernel_call_register(float *buffer, const size_t n_points)
 {
 	const unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -11,17 +35,14 @@ __global__ void kernel_call_register(float *buffer, const size_t n_points)
 	buffer[idx + n_points] = y;
 }
 
-// Kernel for shared memory operations
-__global__ void kernel_call_global(float *buffer, const size_t n_points)
-{
-	const unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
-	operation(&buffer[idx], &buffer[idx + n_points]);
-}
-
-#define INTERATIONS 1024
+/// @brief 
+/// @param x 
+/// @param y 
+/// @return 
 __device__ void operation(float *x, float *y)
 {
-	for (int i = 0; i < INTERATIONS; i++)
+	const size_t iterations = 1024;
+	for (size_t i = 0; i < iterations; i++)
 	{
 		normalize_2d(x, y);
 		rotate_2d(x, y, M_PI * 0.15);
@@ -30,12 +51,23 @@ __device__ void operation(float *x, float *y)
 	}
 }
 
+/// @brief 
+/// @param x 
+/// @param y 
+/// @param dx 
+/// @param dy 
+/// @return None
 __device__ void translate_2d(float *x, float *y, const float dx, const float dy)
 {
     *x += dx;
     *y += dy;
 }
 
+/// @brief 
+/// @param x 
+/// @param y 
+/// @param rad 
+/// @return None
 __device__ void rotate_2d(float *x, float *y, const float rad)
 {
     const float rx = (*x) * (cos(rad)) - (*y) * (sin(rad));
@@ -44,12 +76,21 @@ __device__ void rotate_2d(float *x, float *y, const float rad)
     *y = ry;
 }
 
+/// @brief 
+/// @param x 
+/// @param y 
+/// @param factor 
+/// @return None
 __device__ void scale_2d(float *x, float *y, const float factor)
 {
     *x *= factor;
     *y *= factor;
 }
 
+/// @brief 
+/// @param x 
+/// @param y 
+/// @return None
 __device__ void normalize_2d(float *x, float *y)
 {
     float mag = sqrt(((*x) * (*x)) + ((*y) * (*y)));

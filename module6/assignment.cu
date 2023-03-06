@@ -15,10 +15,7 @@ __host__ void setup(const int totalThreads, const int numBlocks, const int block
 __host__ std::chrono::duration<int64_t, std::nano> run_test(const int totalThreads, const int numBlocks, const int blockSize, float *buffer, const size_t buffer_size, KERNEL_FUNCTION kernel_function);
 
 //-----------------------------------------------------------------------------
-/// @brief
-/// @param argc
-/// @param argv
-/// @return
+/// @brief Main Driver
 //-----------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
@@ -47,14 +44,22 @@ int main(int argc, char **argv)
 		printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
 
-	// Setup local buffer
+	// Setup 2D matrix, note that each thread operates on a coordinate
+	// A coordinate is comprised of two points and the buffer datastructure
+	// is modeled in an float[2][n_points] array.
+	// Access to the coordinate at idx should be as follows:
+	// x <- coordinates[idx]
+	// y <- coordinates[idx + n_points]
 	const size_t BUFFER_SIZE = 2 * totalThreads * sizeof(float);
 	float *coordinates = (float *)malloc(BUFFER_SIZE);
+
+	// Allocate coordinates, note that this is called twice for the x and y elements
 	setup(totalThreads, numBlocks, blockSize, &coordinates[0]);
 	setup(totalThreads, numBlocks, blockSize, &coordinates[totalThreads]);
 
-	printf("%d,", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_register));
-	printf("%d\n", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_global));
+	// Execute register and global time tests
+	printf("%d,", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_global));
+	printf("%d\n", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_register));
 
 	// Cleanup
 	free(coordinates);
@@ -77,6 +82,7 @@ __host__ void setup(const int totalThreads, const int numBlocks, const int block
 	float *dev_buffer;
 	cudaMalloc(&dev_buffer, totalThreads * sizeof(float));
 
+	// Create random F32s
 	populate_random_floats<<<numBlocks, blockSize>>>(dev_buffer, r_state);
 
 	cudaMemcpy(buffer, dev_buffer, totalThreads * sizeof(float), cudaMemcpyDeviceToHost);
@@ -84,6 +90,16 @@ __host__ void setup(const int totalThreads, const int numBlocks, const int block
 	cudaFree(dev_buffer);
 }
 
+//-----------------------------------------------------------------------------
+/// @brief Executes a CUDA kernel call timed test
+/// @param totalThreads Number of CUDA Threads
+/// @param numBlocks Number of CUDA Blocks
+/// @param blockSize CUDA Block Size
+/// @param buffer Pointer to host buffer
+/// @param buffer_size Size of the host buffer in bytes
+/// @param kernel_function Pointer to a KERNEL_FUNCTION
+/// @return The duration of time to execute the kernel function
+//-----------------------------------------------------------------------------
 __host__ std::chrono::duration<int64_t, std::nano> run_test(
 	const int totalThreads, const int numBlocks, const int blockSize,
 	float *buffer, const size_t buffer_size, KERNEL_FUNCTION kernel_function)
@@ -91,13 +107,17 @@ __host__ std::chrono::duration<int64_t, std::nano> run_test(
 #if PRINT_RESULTS
 	float *result = (float *)malloc(buffer_size);
 #endif
+	// Allocate device buffer
 	float *dev_buffer;
 	cudaMalloc(&dev_buffer, buffer_size);
 	cudaMemcpy(dev_buffer, buffer, buffer_size, cudaMemcpyHostToDevice);
+
+	// Execute the kernel function
 	const std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
 	kernel_function<<<numBlocks, blockSize>>>(dev_buffer, totalThreads);
 	cudaDeviceSynchronize();
 	const std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+
 #if PRINT_RESULTS
 	cudaMemcpy(result, dev_buffer, buffer_size, cudaMemcpyDeviceToHost);
 	for (size_t idx = 0; idx < totalThreads; idx++)
