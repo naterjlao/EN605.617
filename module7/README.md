@@ -1,4 +1,4 @@
-# Module 5 Constant vs Shared Memory
+# Module 7 Serial vs Async Memory Operations
 
 ## Building
 Run `make` to compile the `main` executable.
@@ -9,10 +9,10 @@ The following syntax is used to execute `main`.
 ./main <THREADS> <BLOCK_SIZE>
 ```
 Where:
-- `THREADS`: Name of the input text file
-- `BLOCK_SIZE`: Offset value for the Caesar Cypher
+- `THREADS`: Number of Threads
+- `BLOCK_SIZE`: Number of Blocks
 
-The time measurements for Global Memory and Register Memory operations are
+The time measurements for Serial and Asynchronous Memory Operations are
 printed (in order) to stdout.
 
 ## Validation and Metrics

@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 /// @file helpers.cu
 /// @author Nate Lao (nlao1@jh.edu)
-/// @brief Module 5 Helper Functions
+/// @brief Module 7 Helper Functions
 //-----------------------------------------------------------------------------
 #include "helpers.cuh"
 

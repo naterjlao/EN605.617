@@ -5,7 +5,7 @@ make c
 make main
 rm -rvf results.csv
 touch results.csv
-echo -n "threads,global,register" >> results.csv
+echo -n "threads,serial,async" >> results.csv
 echo "" >> results.csv
 
 # 2^25

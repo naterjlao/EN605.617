@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 /// @file transform.cu
 /// @author Nate Lao (nlao1@jh.edu)
-/// @brief Module 6 Matrix Transformation Functions
+/// @brief Module 7 Matrix Transformation Functions
 //-----------------------------------------------------------------------------
 #include "transform.cuh"
 
