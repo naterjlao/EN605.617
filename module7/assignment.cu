@@ -4,15 +4,26 @@
 /// @brief Module 6 Main Driver
 //-----------------------------------------------------------------------------
 #include <stdio.h>
-#include <chrono>
 #include <math.h>
 #include "helpers.cuh"
 #include "transform.cuh"
 
-#define PRINT_RESULTS 0
+#define PRINT_RESULTS 1
 typedef void (*KERNEL_FUNCTION)(float *, size_t);
-__host__ void setup(const int totalThreads, const int numBlocks, const int blockSize, float *buffer);
-__host__ std::chrono::duration<int64_t, std::nano> run_test(const int totalThreads, const int numBlocks, const int blockSize, float *buffer, const size_t buffer_size, KERNEL_FUNCTION kernel_function);
+__host__ void setup(
+	const int totalThreads,
+	const int numBlocks,
+	const int blockSize,
+	float *buffer);
+__host__ float run_serial(
+	const int totalThreads,
+	const int numBlocks,
+	const int
+		blockSize,
+	float *buffer,
+	const size_t buffer_size,
+	KERNEL_FUNCTION kernel_function,
+	const size_t iterations);
 
 //-----------------------------------------------------------------------------
 /// @brief Main Driver
@@ -57,9 +68,15 @@ int main(int argc, char **argv)
 	setup(totalThreads, numBlocks, blockSize, &coordinates[0]);
 	setup(totalThreads, numBlocks, blockSize, &coordinates[totalThreads]);
 
-	// Execute register and global time tests
-	printf("%d,", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_global));
-	printf("%d\n", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_register));
+#if PRINT_RESULTS
+	for (size_t i = 0; i < totalThreads; i++)
+		printf("(%f, %f)\n",coordinates[i], coordinates[i+totalThreads]);
+#endif
+
+	// Execute serial and async time tests
+	const size_t ITERATIONS = 10;
+	printf("%f,", run_serial(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_global, ITERATIONS));
+	// printf("%f\n", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_register));
 
 	// Cleanup
 	free(coordinates);
@@ -73,7 +90,11 @@ int main(int argc, char **argv)
 /// @param buffer pointer to local host buffer
 /// @return None; buffer is modified
 //-----------------------------------------------------------------------------
-__host__ void setup(const int totalThreads, const int numBlocks, const int blockSize, float *buffer)
+__host__ void setup(
+	const int totalThreads,
+	const int numBlocks,
+	const int blockSize,
+	float *buffer)
 {
 	curandState *r_state;
 	cudaMalloc(&r_state, totalThreads * sizeof(curandState));
@@ -91,39 +112,51 @@ __host__ void setup(const int totalThreads, const int numBlocks, const int block
 }
 
 //-----------------------------------------------------------------------------
-/// @brief Executes a CUDA kernel call timed test
+/// @brief Executes a CUDA kernel in a serial memory access.
 /// @param totalThreads Number of CUDA Threads
 /// @param numBlocks Number of CUDA Blocks
 /// @param blockSize CUDA Block Size
 /// @param buffer Pointer to host buffer
 /// @param buffer_size Size of the host buffer in bytes
-/// @param kernel_function Pointer to a KERNEL_FUNCTION
+/// @param kernel_function Pointer to the KERNEL_FUNCTION to execute.
+/// @param interations Number of times to iterate the kernel_function.
 /// @return The duration of time to execute the kernel function
 //-----------------------------------------------------------------------------
-__host__ std::chrono::duration<int64_t, std::nano> run_test(
-	const int totalThreads, const int numBlocks, const int blockSize,
-	float *buffer, const size_t buffer_size, KERNEL_FUNCTION kernel_function)
+__host__ float run_serial(
+	const int totalThreads,
+	const int numBlocks,
+	const int blockSize,
+	float *buffer,
+	const size_t buffer_size,
+	KERNEL_FUNCTION kernel_function,
+	const size_t iterations)
 {
-#if PRINT_RESULTS
-	float *result = (float *)malloc(buffer_size);
-#endif
+	// Setup stopwatch
+	cudaEvent_t start;
+	cudaEvent_t end;
+	float timer;
+	cudaEventCreate(&start);
+	cudaEventCreate(&end);
+
 	// Allocate device buffer
 	float *dev_buffer;
 	cudaMalloc(&dev_buffer, buffer_size);
 	cudaMemcpy(dev_buffer, buffer, buffer_size, cudaMemcpyHostToDevice);
 
 	// Execute the kernel function
-	const std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+	cudaEventRecord(start);
 	kernel_function<<<numBlocks, blockSize>>>(dev_buffer, totalThreads);
 	cudaDeviceSynchronize();
-	const std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+	cudaEventRecord(end);
 
 #if PRINT_RESULTS
+	float *result = (float *)malloc(buffer_size);
 	cudaMemcpy(result, dev_buffer, buffer_size, cudaMemcpyDeviceToHost);
 	for (size_t idx = 0; idx < totalThreads; idx++)
 		printf("(%f,%f)\n", result[idx], result[idx + totalThreads]);
 	free(result);
 #endif
 	cudaFree(dev_buffer);
-	return end - start;
+	cudaEventElapsedTime(&timer, start, end);
+	return timer;
 }
