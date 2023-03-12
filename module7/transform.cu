@@ -41,13 +41,14 @@ __global__ void kernel_call_register(float *buffer, const size_t n_points)
 /// @return 
 __device__ void operation(float *x, float *y)
 {
-	const size_t iterations = 1024;
+	const size_t iterations = 1;
 	for (size_t i = 0; i < iterations; i++)
 	{
-		normalize_2d(x, y);
+		// Normalize is bogus, scale twice
 		rotate_2d(x, y, M_PI * 0.15);
 		translate_2d(x, y, 4.0, 2.68);
 		scale_2d(x, y, 23.0);
+		scale_2d(x, y, 1.0/23.0);
 	}
 }
 
