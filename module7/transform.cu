@@ -35,69 +35,65 @@ __global__ void kernel_call_register(float *buffer, const size_t n_points)
 	buffer[idx + n_points] = y;
 }
 
-/// @brief 
-/// @param x 
-/// @param y 
-/// @return 
+/// @brief
+/// @param x
+/// @param y
+/// @return
 __device__ void operation(float *x, float *y)
 {
-	const size_t iterations = 1;
-	for (size_t i = 0; i < iterations; i++)
-	{
-		// Normalize is bogus, scale twice
-		rotate_2d(x, y, M_PI * 0.15);
-		translate_2d(x, y, 4.0, 2.68);
-		scale_2d(x, y, 23.0);
-		scale_2d(x, y, 1.0/23.0);
-	}
+	// Normalize is bogus, scale twice
+	rotate_2d(x, y, M_PI * 0.15);
+	translate_2d(x, y, 4.0, 2.68);
+	scale_2d(x, y, 23.0);
+	scale_2d(x, y, 1.0 / 23.0);
 }
 
-/// @brief 
-/// @param x 
-/// @param y 
-/// @param dx 
-/// @param dy 
+/// @brief
+/// @param x
+/// @param y
+/// @param dx
+/// @param dy
 /// @return None
 __device__ void translate_2d(float *x, float *y, const float dx, const float dy)
 {
-    *x += dx;
-    *y += dy;
+	*x += dx;
+	*y += dy;
 }
 
-/// @brief 
-/// @param x 
-/// @param y 
-/// @param rad 
+/// @brief
+/// @param x
+/// @param y
+/// @param rad
 /// @return None
 __device__ void rotate_2d(float *x, float *y, const float rad)
 {
-    const float rx = (*x) * (cos(rad)) - (*y) * (sin(rad));
-    const float ry = (*x) * (sin(rad)) + (*y) * (cos(rad));
-    *x = rx;
-    *y = ry;
+	const float rx = (*x) * (cos(rad)) - (*y) * (sin(rad));
+	const float ry = (*x) * (sin(rad)) + (*y) * (cos(rad));
+	*x = rx;
+	*y = ry;
 }
 
-/// @brief 
-/// @param x 
-/// @param y 
-/// @param factor 
+/// @brief
+/// @param x
+/// @param y
+/// @param factor
 /// @return None
 __device__ void scale_2d(float *x, float *y, const float factor)
 {
-    *x *= factor;
-    *y *= factor;
+	*x *= factor;
+	*y *= factor;
 }
 
-/// @brief 
-/// @param x 
-/// @param y 
+/// @brief
+/// @param x
+/// @param y
 /// @return None
 __device__ void normalize_2d(float *x, float *y)
 {
-    float mag = sqrt(((*x) * (*x)) + ((*y) * (*y)));
-    if (mag > 0.0 || mag < 0.0)
-    {
-        *x /= mag;
-        *y /= mag;
-    }
+	float mag = sqrt(((*x) * (*x)) + ((*y) * (*y)));
+	if (mag > 0.0 || mag < 0.0)
+	{
+		*x /= mag;
+		*y /= mag;
+	}
 }

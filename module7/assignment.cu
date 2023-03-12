@@ -8,7 +8,7 @@
 #include "helpers.cuh"
 #include "transform.cuh"
 
-#define PRINT_RESULTS 1
+#define PRINT_RESULTS 0
 typedef void (*KERNEL_FUNCTION)(float *, size_t);
 __host__ void setup(
 	const int totalThreads,
@@ -23,7 +23,16 @@ __host__ float run_serial(
 	float *buffer,
 	const size_t buffer_size,
 	KERNEL_FUNCTION kernel_function,
-	const size_t iterations);
+	size_t iterations);
+__host__ float run_async(
+	const int totalThreads,
+	const int numBlocks,
+	const int
+		blockSize,
+	float *buffer,
+	const size_t buffer_size,
+	KERNEL_FUNCTION kernel_function,
+	size_t iterations);
 
 //-----------------------------------------------------------------------------
 /// @brief Main Driver
@@ -70,13 +79,13 @@ int main(int argc, char **argv)
 
 #if PRINT_RESULTS
 	for (size_t i = 0; i < totalThreads; i++)
-		printf("(%f, %f)\n",coordinates[i], coordinates[i+totalThreads]);
+		printf("(%f, %f)\n", coordinates[i], coordinates[i + totalThreads]);
 #endif
 
 	// Execute serial and async time tests
-	const size_t ITERATIONS = 10;
+	const size_t ITERATIONS = 2048;
 	printf("%f,", run_serial(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_global, ITERATIONS));
-	// printf("%f\n", run_test(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_register));
+	printf("%f\n", run_async(totalThreads, numBlocks, blockSize, coordinates, BUFFER_SIZE, kernel_call_global, ITERATIONS));
 
 	// Cleanup
 	free(coordinates);
@@ -129,7 +138,7 @@ __host__ float run_serial(
 	float *buffer,
 	const size_t buffer_size,
 	KERNEL_FUNCTION kernel_function,
-	const size_t iterations)
+	size_t iterations)
 {
 	// Setup stopwatch
 	cudaEvent_t start;
@@ -138,24 +147,95 @@ __host__ float run_serial(
 	cudaEventCreate(&start);
 	cudaEventCreate(&end);
 
-	// Allocate device buffer
+	// Allocate host and device buffer
+	float *host_buffer = (float *)malloc(buffer_size);
 	float *dev_buffer;
 	cudaMalloc(&dev_buffer, buffer_size);
-	cudaMemcpy(dev_buffer, buffer, buffer_size, cudaMemcpyHostToDevice);
 
-	// Execute the kernel function
+	// Execute memory operations and the kernel function
 	cudaEventRecord(start);
-	kernel_function<<<numBlocks, blockSize>>>(dev_buffer, totalThreads);
-	cudaDeviceSynchronize();
+	while (iterations-- > 0)
+	{
+		cudaMemcpy(dev_buffer, buffer, buffer_size, cudaMemcpyHostToDevice);
+		kernel_function<<<numBlocks, blockSize>>>(dev_buffer, totalThreads);
+		cudaDeviceSynchronize();
+		cudaMemcpy(host_buffer, dev_buffer, buffer_size, cudaMemcpyDeviceToHost);
+	}
 	cudaEventRecord(end);
 
 #if PRINT_RESULTS
-	float *result = (float *)malloc(buffer_size);
-	cudaMemcpy(result, dev_buffer, buffer_size, cudaMemcpyDeviceToHost);
 	for (size_t idx = 0; idx < totalThreads; idx++)
-		printf("(%f,%f)\n", result[idx], result[idx + totalThreads]);
-	free(result);
+		printf("(%f,%f)\n", host_buffer[idx], host_buffer[idx + totalThreads]);
 #endif
+
+	// Cleanup and record time
+	free(host_buffer);
+	cudaFree(dev_buffer);
+	cudaEventElapsedTime(&timer, start, end);
+	return timer;
+}
+
+//-----------------------------------------------------------------------------
+/// @brief Executes a CUDA kernel in using async (stream) memory access.
+/// @param totalThreads Number of CUDA Threads
+/// @param numBlocks Number of CUDA Blocks
+/// @param blockSize CUDA Block Size
+/// @param buffer Pointer to host buffer
+/// @param buffer_size Size of the host buffer in bytes
+/// @param kernel_function Pointer to the KERNEL_FUNCTION to execute.
+/// @param interations Number of times to iterate the kernel_function.
+/// @return The duration of time to execute the kernel function
+//-----------------------------------------------------------------------------
+__host__ float run_async(
+	const int totalThreads,
+	const int numBlocks,
+	const int blockSize,
+	float *buffer,
+	const size_t buffer_size,
+	KERNEL_FUNCTION kernel_function,
+	size_t iterations)
+{
+	// Setup stopwatch
+	cudaEvent_t start;
+	cudaEvent_t end;
+	float timer;
+	cudaEventCreate(&start);
+	cudaEventCreate(&end);
+
+	// Allocate host and device buffers
+	float *host_input;
+	float *host_result;
+	float *dev_buffer;
+	cudaHostAlloc((void **)&host_input, buffer_size, cudaHostAllocDefault);
+	cudaHostAlloc((void **)&host_result, buffer_size, cudaHostAllocDefault);
+	cudaMalloc(&dev_buffer, buffer_size);
+
+	// The vanilla data has to copied to page-locked host memory
+	memcpy(host_input, buffer, buffer_size);
+
+	// Create Stream
+	cudaStream_t stream;
+	cudaStreamCreate(&stream);
+
+	// Execute memory operations and the kernel function
+	cudaEventRecord(start);
+	while (iterations-- > 0)
+	{
+		cudaMemcpyAsync(dev_buffer, host_input, buffer_size, cudaMemcpyHostToDevice, stream);
+		kernel_function<<<numBlocks, blockSize, 1, stream>>>(dev_buffer, totalThreads);
+		cudaMemcpyAsync(host_result, dev_buffer, buffer_size, cudaMemcpyDeviceToHost, stream);
+	}
+	cudaStreamSynchronize(stream);
+	cudaEventRecord(end);
+
+#if PRINT_RESULTS
+	for (size_t idx = 0; idx < totalThreads; idx++)
+		printf("(%f,%f)\n", host_result[idx], host_result[idx + totalThreads]);
+#endif
+
+	// Cleanup and record time
+	cudaFreeHost(host_input);
+	cudaFreeHost(host_result);
 	cudaFree(dev_buffer);
 	cudaEventElapsedTime(&timer, start, end);
 	return timer;
