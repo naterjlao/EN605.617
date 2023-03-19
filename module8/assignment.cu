@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include "helpers.cu"
+
 int main(int argc, char** argv)
 {
 	// read command line arguments

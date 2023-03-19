@@ -13,6 +13,7 @@ maxThreads=33554432
 threads=1024
 while [ $threads -le $maxThreads ]
 do
+    echo "EXECUTING $threads THREADS"
     echo -n "$threads," >> results.csv
     ./main $threads >> results.csv
     threads=$(($threads * 2))
