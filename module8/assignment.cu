@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#include "helpers.cu"
+#include "helpers.cuh"
+#include "helper_timer.h"
 
 int main(int argc, char** argv)
 {
@@ -25,4 +26,7 @@ int main(int argc, char** argv)
 		printf("Warning: Total thread count is not evenly divisible by the block size\n");
 		printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
+
+
+
 }
