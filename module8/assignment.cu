@@ -49,8 +49,8 @@ int main(int argc, char **argv)
 		++numBlocks;
 		totalThreads = numBlocks * blockSize;
 
-		printf("Warning: Total thread count is not evenly divisible by the block size\n");
-		printf("The total number of threads will be rounded up to %d\n", totalThreads);
+		//printf("Warning: Total thread count is not evenly divisible by the block size\n");
+		//printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
 
 	// Allocate Matrices

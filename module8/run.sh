@@ -11,7 +11,7 @@ echo "" >> results.csv
 # 2^210
 maxDim=1024
 threads=2
-while [ $threads -le $maxThreads ]
+while [ $threads -le $maxDim ]
 do
     echo "EXECUTING $threads THREADS"
     echo -n "$threads," >> results.csv
