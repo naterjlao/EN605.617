@@ -8,11 +8,12 @@
 __host__ void printSquareMatrix(const int matlength, float *matrix);
 __host__ void identityMatrix(const int matlength, float *matrix);
 __host__ float cpu_rand_matrix(const size_t size,
-	float *buffer);
+							   float *buffer);
 __host__ float gpu_rand_matrix(const int totalThreads,
-	const int numBlocks,
-	const int blockSize,
-	float *buffer);
+							   const int numBlocks,
+							   const int blockSize,
+							   float *buffer);
+__host__ void cpu_mat_mult(const int matlength, float *A, float *B, float *C);
 
 int main(int argc, char **argv)
 {
@@ -45,23 +46,34 @@ int main(int argc, char **argv)
 	}
 
 	// Allocate Matrices
-	float *matrix_buffer = (float *)malloc(sizeof(float) * totalThreads);
+	float *matrix_input = (float *)malloc(sizeof(float) * totalThreads);
 	float *matrix_identy = (float *)malloc(sizeof(float) * totalThreads);
+	float *matrix_output = (float *)malloc(sizeof(float) * totalThreads);
 
 	printf("%d, ", totalThreads);
 
 #if !(SKIP_CPU)
 	// CPU - Random Number Generation
-	printf("%f, ",cpu_rand_matrix(totalThreads, matrix_buffer));
+	printf("%f, ", cpu_rand_matrix(totalThreads, matrix_input));
 #endif
 
 	// GPU - Random Number Generation
-	printf("%f,\n",gpu_rand_matrix(totalThreads, numBlocks, blockSize, matrix_buffer));
+	printf("%f,\n", gpu_rand_matrix(totalThreads, numBlocks, blockSize, matrix_input));
 
-	//identityMatrix(matlength, matrix_identy);
-	//printSquareMatrix(matlength, matrix_buffer);
+	// Identity Matrix
+	identityMatrix(matlength, matrix_identy);
+	printSquareMatrix(matlength, matrix_input);
 
-	free(matrix_buffer);
+	// Result Matrix
+	memset(matrix_output, 0, sizeof(float) * totalThreads);
+
+	cpu_mat_mult(matlength, matrix_identy, matrix_input, matrix_output);
+
+	printSquareMatrix(matlength, matrix_output);
+
+	free(matrix_input);
+	free(matrix_identy);
+	free(matrix_output);
 }
 
 __host__ void printSquareMatrix(const int matlength, float *matrix)
@@ -91,7 +103,7 @@ __host__ void identityMatrix(const int matlength, float *matrix)
 /// @return None; buffer is modified
 //-----------------------------------------------------------------------------
 __host__ float cpu_rand_matrix(const size_t size,
-	float *buffer)
+							   float *buffer)
 {
 	StopWatchInterface *stopwatch = new StopWatchLinux();
 	srand(420);
@@ -100,10 +112,10 @@ __host__ float cpu_rand_matrix(const size_t size,
 	stopwatch->start();
 	for (size_t i = 0; i < size; i++)
 	{
-		buffer[i] = (float) (rand() / ((float) RAND_MAX));
+		buffer[i] = (float)(rand() / ((float)RAND_MAX));
 	}
 	stopwatch->stop();
-	
+
 	// Measure time - note that this is measured in the CPU and is in milliseconds
 	float timer = stopwatch->getTime();
 	delete stopwatch;
@@ -119,9 +131,9 @@ __host__ float cpu_rand_matrix(const size_t size,
 /// @return None; buffer is modified
 //-----------------------------------------------------------------------------
 __host__ float gpu_rand_matrix(const int totalThreads,
-	const int numBlocks,
-	const int blockSize,
-	float *buffer)
+							   const int numBlocks,
+							   const int blockSize,
+							   float *buffer)
 {
 	curandState *r_state;
 	cudaMalloc(&r_state, totalThreads * sizeof(curandState));
@@ -142,13 +154,37 @@ __host__ float gpu_rand_matrix(const int totalThreads,
 	populate_random_floats<<<numBlocks, blockSize>>>(dev_buffer, r_state);
 	cudaDeviceSynchronize();
 	cudaEventRecord(end);
-	
+
 	// Copy To Host
 	cudaMemcpy(buffer, dev_buffer, totalThreads * sizeof(float), cudaMemcpyDeviceToHost);
 	cudaFree(r_state);
 	cudaFree(dev_buffer);
-	
+
 	// Measure Time - note that this measured from CUDA and is in milliseconds
 	cudaEventElapsedTime(&timer, start, end);
 	return timer;
+}
+
+/// @brief CPU Square Matrix Multiplication
+/// @param matlength Single Dimension of the input Matrices
+/// @param A Left Matrix
+/// @param B Right Matrix
+/// @param C Output Matrix
+/// @return
+__host__ void cpu_mat_mult(const int matlength, float *A, float *B, float *C)
+{
+	float p;
+	float sum;
+	for (int idx = 0; idx < matlength; idx++)
+	{
+		for (int jdx = 0; jdx < matlength; jdx++)
+		{
+			sum = 0.0;
+			for (int kdx = 0; kdx < matlength; kdx++)
+			{
+				sum += A[kdx + (matlength * jdx)] * B[idx + (matlength * kdx)];
+			}
+			C[idx + (matlength * jdx)] = sum;
+		}
+	}
 }
