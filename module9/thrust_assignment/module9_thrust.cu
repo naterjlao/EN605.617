@@ -74,14 +74,7 @@ int main(int argc, char **argv)
   thrust::device_vector<int> prod(vector_size);
   thrust::device_vector<int> rem(vector_size);
 
-  // Set Stopwatch
-  float time;
-  cudaEvent_t start;
-  cudaEvent_t end;
-  cudaEventCreate(&start);
-  cudaEventCreate(&end);
-
-  cudaEventRecord(start);
+  std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
   for (int iter = 0; iter < iterations; iter++)
   {
     // Perform addition sum = alpha + bravo
@@ -96,8 +89,7 @@ int main(int argc, char **argv)
     // Perform modulo rem = prod % gamma
     thrust::transform(prod.begin(), prod.end(), omega.begin(), rem.begin(), thrust::modulus<int>());
   }
-  cudaEventRecord(end);
-  cudaEventElapsedTime(&time, start, end);
+  std::chrono::time_point<std::chrono::steady_clock> end_time = std::chrono::steady_clock::now();
 
 #if PRINT_DEBUG
   for (int i = 0; i < vector_size; i++)
@@ -112,7 +104,8 @@ int main(int argc, char **argv)
 #endif
 
   // Print performance metrics
-  std::cout << vector_size << ", " << time << std::endl;
+  std::cout << vector_size << ", " << iterations << ", ";
+  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << std::endl;
 
   return 0;
 }

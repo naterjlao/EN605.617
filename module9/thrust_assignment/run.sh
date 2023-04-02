@@ -5,7 +5,7 @@ make c
 make main
 rm -rvf results.csv
 touch results.csv
-echo -n "vector_size,time" >> results.csv
+echo -n "vector_size,iterations,milliseconds" >> results.csv
 echo "" >> results.csv
 
 max_size=8388608
