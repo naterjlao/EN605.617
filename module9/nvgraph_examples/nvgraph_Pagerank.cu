@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
-#include "nvgraph.h"
+#include <nvgraph.h>
 
 /* PageRank
  *  Find PageRank for a graph with a given transition probabilities, a bookmark vector of dangling vertices, and the damping factor.
