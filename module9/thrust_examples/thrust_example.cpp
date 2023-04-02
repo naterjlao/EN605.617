@@ -31,16 +31,17 @@ int main(void)
   // Copy host_vector H to device_vector D
   thrust::device_vector<int> D = H;
 
+#if 0
   // elements of D can be modified
-  D[0] = 99;
-  D[1] = 88;
+  //D[0] = 99;
+  //D[1] = 88;
 
   // print contents of D
   for(int i = 0; i < D.size(); i++)
   {
     std::cout << "D[" << i << "] = " << D[i] << std::endl;
   }
-
+#endif
   // H and D are automatically destroyed when the function returns
   return 0;
 }
