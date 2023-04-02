@@ -9,12 +9,12 @@ echo -n "vector_size,time" >> results.csv
 echo "" >> results.csv
 
 max_size=8388608
-size=256
 max_iterations=10000
-iterations=1000
 
+iterations=1000
 while [ $iterations -le $max_iterations ]
 do
+    size=256
     while [ $size -le $max_size ]
     do
         echo "EXECUTING SIZE=$size ITERATIONS=$iterations"
