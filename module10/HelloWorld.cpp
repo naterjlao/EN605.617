@@ -259,15 +259,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // Create OpenCL kernel
-    kernel = clCreateKernel(program, "hello_kernel", NULL);
-    if (kernel == NULL)
-    {
-        std::cerr << "Failed to create kernel" << std::endl;
-        Cleanup(context, commandQueue, program, kernel, memObjects);
-        return 1;
-    }
-
     // Create memory objects that will be used as arguments to
     // kernel.  First create host memory arrays that will be
     // used to store the arguments to the kernel
@@ -286,6 +277,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#if 1
+    // Create OpenCL kernel
+    kernel = clCreateKernel(program, "pow_kernel", NULL);
+    if (kernel == NULL)
+    {
+        std::cerr << "Failed to create kernel" << std::endl;
+        Cleanup(context, commandQueue, program, kernel, memObjects);
+        return 1;
+    }
+
     // Set the kernel arguments (result, a, b)
     errNum = clSetKernelArg(kernel, 0, sizeof(cl_mem), &memObjects[0]);
     errNum |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &memObjects[1]);
@@ -296,6 +297,7 @@ int main(int argc, char** argv)
         Cleanup(context, commandQueue, program, kernel, memObjects);
         return 1;
     }
+#endif
 
     size_t globalWorkSize[1] = { ARRAY_SIZE };
     size_t localWorkSize[1] = { 1 };
