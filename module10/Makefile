@@ -1,4 +1,6 @@
-all: assignment.cpp
+all: main
+
+main: assignment.cpp
 	g++ assignment.cpp -lOpenCL -o main
 
 .PHONY: clean
