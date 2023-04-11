@@ -1,18 +1,18 @@
-//
-// Book:      OpenCL(R) Programming Guide
-// Authors:   Aaftab Munshi, Benedict Gaster, Timothy Mattson, James Fung, Dan Ginsburg
-// ISBN-10:   0-321-74964-2
-// ISBN-13:   978-0-321-74964-2
-// Publisher: Addison-Wesley Professional
-// URLs:      http://safari.informit.com/9780132488006/
-//            http://www.openclprogrammingguide.com
-//
-
-// HelloWorld.cpp
-//
-//    This is a simple example that demonstrates basic OpenCL setup and
-//    use.
-
+//-----------------------------------------------------------------------------
+/// @file assignment.cpp
+/// @author Nate Lao (nlao1@jh.edu)
+/// @brief Module 10 Main Driver
+/// @note This is derived from the original HelloWorld.cpp example provided by:
+///
+/// Book:      OpenCL(R) Programming Guide
+/// Authors:   Aaftab Munshi, Benedict Gaster, Timothy Mattson, James Fung, Dan Ginsburg
+/// ISBN-10:   0-321-74964-2
+/// ISBN-13:   978-0-321-74964-2
+/// Publisher: Addison-Wesley Professional
+/// URLs:      http://safari.informit.com/9780132488006/
+///            http://www.openclprogrammingguide.com
+///
+//-----------------------------------------------------------------------------
 #include <string.h>
 #include <iostream>
 #include <fstream>
@@ -291,13 +291,14 @@ int64_t ExecuteKernel(
     return executionTime;
 }
 
-///
-//	main() for HelloWorld example
-//
+/// @brief Main Driver
+/// @param argc 
+/// @param argv 
+/// @return 
 int main(int argc, char **argv)
 {
-    // Input params, ARRAY_SIZE
-    size_t arraySize = 1000;
+    // Optional arugment: arraySize
+    size_t arraySize = 2 << 10;
     if (argc >= 2)
     {
         arraySize = atoi(argv[1]);
@@ -327,8 +328,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // Create OpenCL program from HelloWorld.cl kernel source
-    program = CreateProgram(context, device, "HelloWorld.cl");
+    // Create OpenCL program from kernel source
+    program = CreateProgram(context, device, "math.cl");
     if (program == NULL)
     {
         Cleanup(context, commandQueue, program, 0, memObjects);
