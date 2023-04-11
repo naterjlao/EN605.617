@@ -253,6 +253,9 @@ int64_t ExecuteKernel(
         }
     }
 
+    // Measure Execution Time from before the kernel queue to after the result has been returned
+    // to the Host.
+    std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
     if (errNum == CL_SUCCESS)
     {
         size_t globalWorkSize[1] = {arraySize};
@@ -281,11 +284,12 @@ int64_t ExecuteKernel(
             Cleanup(context, commandQueue, program, kernel, memObjects);
         }
     }
+    std::chrono::time_point<std::chrono::steady_clock> end_time = std::chrono::steady_clock::now();
 
     if (errNum == CL_SUCCESS)
     {
         /// @todo measure execution
-        executionTime = 0;
+        executionTime = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
     }
 
     return executionTime;
@@ -355,6 +359,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    // Perform Kernel Executions
+    std::cout << arraySize << ",";
     std::cout << ExecuteKernel(context, commandQueue, program, memObjects, "add_kernel", arraySize, result) << ",";
     std::cout << ExecuteKernel(context, commandQueue, program, memObjects, "sub_kernel", arraySize, result) << ",";
     std::cout << ExecuteKernel(context, commandQueue, program, memObjects, "mul_kernel", arraySize, result) << ",";
