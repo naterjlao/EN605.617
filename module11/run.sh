@@ -8,7 +8,7 @@ touch results.csv
 echo -n "iterations,time_us" >> results.csv
 echo "" >> results.csv
 
-max_iterations=50000
+max_iterations=100000
 iterations=1000
 while [ $iterations -le $max_iterations ]
 do

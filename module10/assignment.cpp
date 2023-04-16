@@ -288,7 +288,6 @@ int64_t ExecuteKernel(
 
     if (errNum == CL_SUCCESS)
     {
-        /// @todo measure execution
         executionTime = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
     }
 
