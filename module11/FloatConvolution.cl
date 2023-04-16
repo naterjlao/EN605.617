@@ -1,6 +1,6 @@
 
 ///
-__kernel void gauss(
+__kernel void fl_convolve(
 	const __global float * const input,
     __constant float * const mask,
     __global  float * const output,

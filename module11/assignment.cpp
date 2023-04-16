@@ -45,19 +45,20 @@ cl_float inputSignal[inputSignalHeight][inputSignalWidth] =
 	{5.0, 9.0, 8.0, 1.0, 8.0, 1.0, 1.0, 1.0}
 };
 
-const unsigned int outputSignalWidth  = 6;
-const unsigned int outputSignalHeight = 6;
-
+const unsigned int outputSignalWidth  = 2;
+const unsigned int outputSignalHeight = 2;
 cl_float outputSignal[outputSignalHeight][outputSignalWidth];
 
-const unsigned int maskWidth  = 3;
-const unsigned int maskHeight = 3;
-
-cl_float mask[maskHeight][maskWidth] =
+const unsigned int kernelMatrixDim = 7;
+cl_float kernelMatrix[kernelMatrixDim][kernelMatrixDim] =
 {
-	{1.0, 1.0, 1.0},
-	{1.0, 0.0, 1.0},
-	{1.0, 1.0, 1.0},
+	{0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25},
+	{0.25, 0.50, 0.50, 0.50, 0.50, 0.50, 0.25},
+	{0.25, 0.50, 0.75, 0.75, 0.75, 0.50, 0.25},
+	{0.25, 0.50, 0.75, 1.00, 0.75, 0.50, 0.25},
+	{0.25, 0.50, 0.75, 0.75, 0.75, 0.50, 0.25},
+	{0.25, 0.50, 0.50, 0.50, 0.50, 0.50, 0.25},
+	{0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25},
 };
 
 ///
@@ -167,8 +168,8 @@ int main(int argc, char** argv)
 		&errNum);
 	checkErr(errNum, "clCreateContext");
 
-	std::ifstream srcFile("PseudoGaussian.cl");
-    checkErr(srcFile.is_open() ? CL_SUCCESS : -1, "reading PseudoGaussian.cl");
+	std::ifstream srcFile("FloatConvolution.cl");
+    checkErr(srcFile.is_open() ? CL_SUCCESS : -1, "reading FloatConvolution.cl");
 
 	std::string srcProg(
         std::istreambuf_iterator<char>(srcFile),
@@ -214,7 +215,7 @@ int main(int argc, char** argv)
 	// Create kernel object
 	kernel = clCreateKernel(
 		program,
-		"gauss",
+		"fl_convolve",
 		&errNum);
 	checkErr(errNum, "clCreateKernel");
 
@@ -222,7 +223,7 @@ int main(int argc, char** argv)
 	inputSignalBuffer = clCreateBuffer(
 		context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		sizeof(cl_uint) * inputSignalHeight * inputSignalWidth,
+		sizeof(cl_float) * inputSignalHeight * inputSignalWidth,
 		static_cast<void *>(inputSignal),
 		&errNum);
 	checkErr(errNum, "clCreateBuffer(inputSignal)");
@@ -230,15 +231,15 @@ int main(int argc, char** argv)
 	maskBuffer = clCreateBuffer(
 		context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		sizeof(cl_uint) * maskHeight * maskWidth,
-		static_cast<void *>(mask),
+		sizeof(cl_float) * kernelMatrixDim * kernelMatrixDim,
+		static_cast<void *>(kernelMatrix),
 		&errNum);
-	checkErr(errNum, "clCreateBuffer(mask)");
+	checkErr(errNum, "clCreateBuffer(kernelMatrix)");
 
 	outputSignalBuffer = clCreateBuffer(
 		context,
 		CL_MEM_WRITE_ONLY,
-		sizeof(cl_uint) * outputSignalHeight * outputSignalWidth,
+		sizeof(cl_float) * outputSignalHeight * outputSignalWidth,
 		NULL,
 		&errNum);
 	checkErr(errNum, "clCreateBuffer(outputSignal)");
@@ -255,7 +256,7 @@ int main(int argc, char** argv)
 	errNum |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &maskBuffer);
     errNum |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &outputSignalBuffer);
 	errNum |= clSetKernelArg(kernel, 3, sizeof(cl_uint), &inputSignalWidth);
-	errNum |= clSetKernelArg(kernel, 4, sizeof(cl_uint), &maskWidth);
+	errNum |= clSetKernelArg(kernel, 4, sizeof(cl_uint), &kernelMatrixDim);
 	checkErr(errNum, "clSetKernelArg");
 
 	const size_t globalWorkSize[2] = { outputSignalWidth, outputSignalHeight };
