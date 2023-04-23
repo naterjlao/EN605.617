@@ -19,7 +19,7 @@
 #include <string>
 #include <chrono>
 
-#define PRINT_DEBUG 0
+#define PRINT_DEBUG 1
 
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
