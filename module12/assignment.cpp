@@ -1,23 +1,25 @@
-//
-// Book:      OpenCL(R) Programming Guide
-// Authors:   Aaftab Munshi, Benedict Gaster, Timothy Mattson, James Fung, Dan Ginsburg
-// ISBN-10:   0-321-74964-2
-// ISBN-13:   978-0-321-74964-2
-// Publisher: Addison-Wesley Professional
-// URLs:      http://safari.informit.com/9780132488006/
-//            http://www.openclprogrammingguide.com
-//
 
-// raytracer.cpp
-//
-//    This is a (very) simple raytracer that is intended to demonstrate
-//    using OpenCL buffers.
-
+//-----------------------------------------------------------------------------
+/// @file assignment.cpp
+/// @author Nate Lao (nlao1@jh.edu)
+/// @brief Module 12 Main Driver
+/// @note This is derived from example provided by:
+///
+/// Book:      OpenCL(R) Programming Guide
+/// Authors:   Aaftab Munshi, Benedict Gaster, Timothy Mattson, James Fung, Dan Ginsburg
+/// ISBN-10:   0-321-74964-2
+/// ISBN-13:   978-0-321-74964-2
+/// Publisher: Addison-Wesley Professional
+/// URLs:      http://safari.informit.com/9780132488006/
+///            http://www.openclprogrammingguide.com
+///
+//-----------------------------------------------------------------------------
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "info.hpp"
 
@@ -37,9 +39,7 @@ checkErr(cl_int err, const char *name)
 	}
 }
 
-///
-//	main() for simple buffer and sub-buffer example
-//
+// Main Driver
 int main(int argc, char **argv)
 {
 	cl_int errNum;
@@ -53,10 +53,13 @@ int main(int argc, char **argv)
 	std::vector<cl_command_queue> queues;
 	std::vector<cl_mem> buffers;
 	int *inputOutput;
+	size_t iterations = 1;
+	if (argc >= 2)
+	{
+		iterations = atoi(argv[1]);
+	}
 
 	int platform = DEFAULT_PLATFORM;
-
-	std::cout << "Simple buffer and sub-buffer Example" << std::endl;
 
 	// First, select an OpenCL platform to run on.
 	errNum = clGetPlatformIDs(0, NULL, &numPlatforms);
@@ -67,7 +70,9 @@ int main(int argc, char **argv)
 	platformIDs = (cl_platform_id *)alloca(
 		sizeof(cl_platform_id) * numPlatforms);
 
+#if PRINT_DEBUG
 	std::cout << "Number of platforms: \t" << numPlatforms << std::endl;
+#endif
 
 	errNum = clGetPlatformIDs(numPlatforms, platformIDs, NULL);
 	checkErr(
@@ -85,10 +90,12 @@ int main(int argc, char **argv)
 	size_t length = srcProg.length();
 
 	deviceIDs = NULL;
+#if PRINT_DEBUG
 	DisplayPlatformInfo(
 		platformIDs[platform],
 		CL_PLATFORM_VENDOR,
 		"CL_PLATFORM_VENDOR");
+#endif
 
 	errNum = clGetDeviceIDs(
 		platformIDs[platform],
@@ -175,13 +182,13 @@ int main(int argc, char **argv)
 		&errNum);
 	checkErr(errNum, "clCreateBuffer");
 
-	// now for all devices other than the first create a sub-buffer
-	for (unsigned int i = 0; i < numDevices; i++)
+	// create a 2x2 sub-buffer for every point
+	for (unsigned int i = 0; i < NUM_BUFFER_ELEMENTS; i++)
 	{
 		cl_buffer_region region =
 			{
-				NUM_BUFFER_ELEMENTS * i * sizeof(int),
-				NUM_BUFFER_ELEMENTS * sizeof(int)};
+				i * sizeof(int),
+				4 * sizeof(int)};
 		cl_mem buffer = clCreateSubBuffer(
 			main_buffer,
 			CL_MEM_READ_WRITE,
@@ -189,22 +196,16 @@ int main(int argc, char **argv)
 			&region,
 			&errNum);
 		checkErr(errNum, "clCreateSubBuffer");
-
 		buffers.push_back(buffer);
 	}
 
-	// Create command queues
-	for (unsigned int i = 0; i < numDevices; i++)
+	// create a command queue for every sub-buffer
+	for (unsigned int i = 0; i < NUM_BUFFER_ELEMENTS; i++)
 	{
-		InfoDevice<cl_device_type>::display(
-			deviceIDs[i],
-			CL_DEVICE_TYPE,
-			"CL_DEVICE_TYPE");
-
 		cl_command_queue queue =
 			clCreateCommandQueue(
 				context,
-				deviceIDs[i],
+				deviceIDs[0],
 				0,
 				&errNum);
 		checkErr(errNum, "clCreateCommandQueue");
@@ -223,43 +224,53 @@ int main(int argc, char **argv)
 		kernels.push_back(kernel);
 	}
 
-	// Write input data
-	errNum = clEnqueueWriteBuffer(
-		queues[numDevices - 1],
-		main_buffer,
-		CL_TRUE,
-		0,
-		sizeof(int) * NUM_BUFFER_ELEMENTS * numDevices,
-		(void *)inputOutput,
-		0,
-		NULL,
-		NULL);
-
-	std::vector<cl_event> events;
-	// call kernel for each device
-	for (unsigned int i = 0; i < queues.size(); i++)
+	std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
+	// Perform a number of iterations
+	for (size_t iter = 0; iter < iterations; iter++)
 	{
-		cl_event event;
-
-		size_t gWI = NUM_BUFFER_ELEMENTS;
-
-		errNum = clEnqueueNDRangeKernel(
-			queues[i],
-			kernels[i],
-			1,
+		// Write input data
+		errNum = clEnqueueWriteBuffer(
+			queues[numDevices - 1],
+			main_buffer,
+			CL_TRUE,
+			0,
+			sizeof(int) * NUM_BUFFER_ELEMENTS * numDevices,
+			(void *)inputOutput,
+			0,
 			NULL,
-			(const size_t *)&gWI,
-			(const size_t *)NULL,
-			0,
-			0,
-			&event);
+			NULL);
 
-		events.push_back(event);
+		std::vector<cl_event> events;
+		// call kernel for each device
+		for (unsigned int i = 0; i < queues.size(); i++)
+		{
+			cl_event event;
+
+			const size_t globalWorkSize[2] = {4, 4};
+			const size_t localWorkSize[2] = {2, 2};
+
+			errNum = clEnqueueNDRangeKernel(
+				queues[i],
+				kernels[i],
+				2,
+				NULL,
+				globalWorkSize,
+				localWorkSize,
+				0,
+				0,
+				&event);
+
+			events.push_back(event);
+		}
+
+		// Technically don't need this as we are doing a blocking read
+		// with in-order queue.
+		clWaitForEvents(events.size(), &events[0]);
 	}
-
-	// Technically don't need this as we are doing a blocking read
-	// with in-order queue.
-	clWaitForEvents(events.size(), &events[0]);
+	std::chrono::time_point<std::chrono::steady_clock> end_time = std::chrono::steady_clock::now();
+	std::cout << iterations << ","
+		<< std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count()
+		<< std::endl;
 
 	// Read back computed data
 	clEnqueueReadBuffer(
@@ -273,18 +284,20 @@ int main(int argc, char **argv)
 		NULL,
 		NULL);
 
+#if PRINT_DEBUG
 	// Display output in rows
 	for (unsigned i = 0; i < numDevices; i++)
 	{
 		for (unsigned elems = i * NUM_BUFFER_ELEMENTS; elems < ((i + 1) * NUM_BUFFER_ELEMENTS); elems++)
 		{
+			if (elems % 4 == 0 && elems > 0)
+				std::cout << std::endl;
 			std::cout << " " << inputOutput[elems];
 		}
-
 		std::cout << std::endl;
 	}
-
 	std::cout << "Program completed successfully" << std::endl;
+#endif
 
 	return 0;
 }
