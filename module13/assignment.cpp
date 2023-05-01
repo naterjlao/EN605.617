@@ -49,9 +49,6 @@ int main(int argc, char** argv)
     cl_context context0;
     cl_program program0;
     int * inputOutput0;
-    cl_context context1;
-    cl_program program1;
-    int * inputOutput1;
 
     int platform = DEFAULT_PLATFORM; 
 
@@ -124,15 +121,6 @@ int main(int argc, char** argv)
         NULL, 
         &errNum);
     checkErr(errNum, "clCreateContext");
-
-    context1 = clCreateContext(
-        contextProperties, 
-        numDevices,
-        deviceIDs, 
-        NULL,
-        NULL, 
-        &errNum);
-    checkErr(errNum, "clCreateContext");
  
     // Create program from source
     program0 = clCreateProgramWithSource(
@@ -142,28 +130,10 @@ int main(int argc, char** argv)
         &length, 
         &errNum);
     checkErr(errNum, "clCreateProgramWithSource");
-
-     // Create program from source
-    program1 = clCreateProgramWithSource(
-        context1, 
-        1, 
-        &src, 
-        &length, 
-        &errNum);
-    checkErr(errNum, "clCreateProgramWithSource");
  
     // Build program
     errNum = clBuildProgram(
         program0,
-        numDevices,
-        deviceIDs,
-        "-I.",
-        NULL,
-        NULL);
- 
-     // Build program
-    errNum |= clBuildProgram(
-        program1,
         numDevices,
         deviceIDs,
         "-I.",
@@ -185,20 +155,6 @@ int main(int argc, char** argv)
             std::cerr << "Error in OpenCL C source: " << std::endl;
             std::cerr << buildLog0;
             checkErr(errNum, "clBuildProgram");
-     
-        // Determine the reason for the error
-        char buildLog1[16384];
-        clGetProgramBuildInfo(
-            program1, 
-            deviceIDs[0], 
-            CL_PROGRAM_BUILD_LOG,
-            sizeof(buildLog1), 
-            buildLog1, 
-            NULL);
-
-            std::cerr << "Error in OpenCL C source: " << std::endl;
-            std::cerr << buildLog1;
-            checkErr(errNum, "clBuildProgram");
     }
 
     // create buffers and sub-buffers
@@ -207,25 +163,10 @@ int main(int argc, char** argv)
     {
         inputOutput0[i] = i;
     }
- 
-    inputOutput1 = new int[NUM_BUFFER_ELEMENTS * numDevices];
-    for (unsigned int i = 0; i < NUM_BUFFER_ELEMENTS * numDevices; i++)
-    {
-        inputOutput1[i] = i;
-    }
 
     // create a single buffer to cover all the input data
     cl_mem buffer0 = clCreateBuffer(
         context0,
-        CL_MEM_READ_WRITE,
-        sizeof(int) * NUM_BUFFER_ELEMENTS * numDevices,
-        NULL,
-        &errNum);
-    checkErr(errNum, "clCreateBuffer");
- 
-     // create a single buffer to cover all the input data
-    cl_mem buffer1 = clCreateBuffer(
-        context1,
         CL_MEM_READ_WRITE,
         sizeof(int) * NUM_BUFFER_ELEMENTS * numDevices,
         NULL,
@@ -246,31 +187,14 @@ int main(int argc, char** argv)
      	&errNum);
     checkErr(errNum, "clCreateCommandQueue");
  
-    cl_command_queue queue1 = 
-     	clCreateCommandQueue(
-     	context1,
-     	deviceIDs[0],
-     	0,
-     	&errNum);
-    checkErr(errNum, "clCreateCommandQueue");
- 
     cl_kernel kernel0 = clCreateKernel(
      program0,
      "square",
      &errNum);
     checkErr(errNum, "clCreateKernel(square)");
- 
-    cl_kernel kernel1 = clCreateKernel(
-     program1,
-     "cube",
-     &errNum);
-    checkErr(errNum, "clCreateKernel(cube)");
 
     errNum = clSetKernelArg(kernel0, 0, sizeof(cl_mem), (void *)&buffer0);
     checkErr(errNum, "clSetKernelArg(square)");
-
-    errNum = clSetKernelArg(kernel1, 0, sizeof(cl_mem), (void *)&buffer1);
-    checkErr(errNum, "clSetKernelArg(cube)");
  
     // Write input data
     errNum = clEnqueueWriteBuffer(
@@ -284,20 +208,11 @@ int main(int argc, char** argv)
       NULL,
       NULL);
  
-    errNum = clEnqueueWriteBuffer(
-      queue1,
-      buffer1,
-      CL_TRUE,
-      0,
-      sizeof(int) * NUM_BUFFER_ELEMENTS * numDevices,
-      (void*)inputOutput1,
-      0,
-      NULL,
-      NULL);
- 
     std::vector<cl_event> events;
     // call kernel for each device
     cl_event event0;
+	cl_event eventUser;
+
 
     size_t gWI = NUM_BUFFER_ELEMENTS;
 
@@ -313,18 +228,7 @@ int main(int argc, char** argv)
       &event0);
 	
  	cl_event event1;
- 	errNum = clEnqueueMarker(queue1, &event1);
-
-    errNum = clEnqueueNDRangeKernel(
-      queue1, 
-      kernel1, 
-      1, 
-      NULL,
-      (const size_t*)&gWI, 
-      (const size_t*)NULL, 
-      0, 
-      0, 
-      &event0); 
+ 	//errNum = clEnqueueMarker(queue1, &event1);
  	
  	//Wait for queue 1 to complete before continuing on queue 0
  	errNum = clEnqueueBarrier(queue0);
@@ -341,27 +245,11 @@ int main(int argc, char** argv)
             0,
             NULL,
             NULL);
-   	clEnqueueReadBuffer(
-            queue1,
-            buffer1,
-            CL_TRUE,
-            0,
-            sizeof(int) * NUM_BUFFER_ELEMENTS * numDevices,
-            (void*)inputOutput1,
-            0,
-            NULL,
-            NULL);
  
     // Display output in rows
     for (unsigned elems = 0; elems < NUM_BUFFER_ELEMENTS; elems++)
     {
      std::cout << " " << inputOutput0[elems];
-    }
-    std::cout << std::endl;
- 
-    for (unsigned elems = 0; elems < NUM_BUFFER_ELEMENTS; elems++)
-    {
-     std::cout << " " << inputOutput1[elems];
     }
     std::cout << std::endl;
  
