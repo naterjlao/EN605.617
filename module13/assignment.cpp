@@ -208,7 +208,13 @@ int main(int argc, char** argv)
  	errNum = clEnqueueBarrier(queue0);
  	errNum = clEnqueueWaitForEvents(queue0, 1, &eventUser);
 
-	inputOutput0[0] = 6;
+	size_t userIdx = 0;
+	while (userIdx < NUM_BUFFER_ELEMENTS)
+	{
+		std::cout << "input[" << userIdx << "] = ";
+		std::cin >> inputOutput0[userIdx];
+		userIdx++;
+	}
 	errNum = clSetUserEventStatus (eventUser,CL_COMPLETE);
 
     // Write input data
