@@ -18,6 +18,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "info.hpp"
 
@@ -216,6 +217,7 @@ int main(int argc, char** argv)
 		userIdx++;
 	}
 	errNum = clSetUserEventStatus (eventUser,CL_COMPLETE);
+	std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
 
     // Write input data
     errNum = clEnqueueWriteBuffer(
@@ -252,6 +254,8 @@ int main(int argc, char** argv)
             NULL,
             NULL);
 
+	std::chrono::time_point<std::chrono::steady_clock> end_time = std::chrono::steady_clock::now();
+
     // Display output in rows
     for (unsigned elems = 0; elems < NUM_BUFFER_ELEMENTS; elems++)
     {
@@ -260,6 +264,9 @@ int main(int argc, char** argv)
     std::cout << std::endl;
  
     std::cout << "Program completed successfully" << std::endl;
+	std::cout << "Kernel Execution Time: "
+		<< std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count()
+		<< "us" << std::endl;
 
     return 0;
 }
