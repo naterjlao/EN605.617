@@ -196,6 +196,21 @@ int main(int argc, char** argv)
     errNum = clSetKernelArg(kernel0, 0, sizeof(cl_mem), (void *)&buffer0);
     checkErr(errNum, "clSetKernelArg(square)");
  
+    // call kernel for each device
+    cl_event event0;
+    size_t gWI = NUM_BUFFER_ELEMENTS;
+	
+	// Create a user event
+ 	cl_event eventUser = clCreateUserEvent(context0, &errNum);
+	checkErr(errNum, "clCreateUserEvent");
+
+ 	//Wait for queue 1 to complete before continuing on queue 0
+ 	errNum = clEnqueueBarrier(queue0);
+ 	errNum = clEnqueueWaitForEvents(queue0, 1, &eventUser);
+
+	inputOutput0[0] = 6;
+	errNum = clSetUserEventStatus (eventUser,CL_COMPLETE);
+
     // Write input data
     errNum = clEnqueueWriteBuffer(
       queue0,
@@ -205,16 +220,8 @@ int main(int argc, char** argv)
       sizeof(int) * NUM_BUFFER_ELEMENTS * numDevices,
       (void*)inputOutput0,
       0,
-      NULL,
-      NULL);
- 
-    std::vector<cl_event> events;
-    // call kernel for each device
-    cl_event event0;
-	cl_event eventUser;
-
-
-    size_t gWI = NUM_BUFFER_ELEMENTS;
+      0,
+      &event0);
 
     errNum = clEnqueueNDRangeKernel(
       queue0, 
@@ -226,13 +233,6 @@ int main(int argc, char** argv)
       0, 
       0, 
       &event0);
-	
- 	cl_event event1;
- 	//errNum = clEnqueueMarker(queue1, &event1);
- 	
- 	//Wait for queue 1 to complete before continuing on queue 0
- 	errNum = clEnqueueBarrier(queue0);
- 	errNum = clEnqueueWaitForEvents(queue0, 1, &event1);
 
  	// Read back computed data
    	clEnqueueReadBuffer(
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
             0,
             NULL,
             NULL);
- 
+
     // Display output in rows
     for (unsigned elems = 0; elems < NUM_BUFFER_ELEMENTS; elems++)
     {
